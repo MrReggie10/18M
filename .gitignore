@@ -11,7 +11,7 @@ Release/
 release
 
 #Ignore drivers
-/Drivers
+/[Dd]rivers/
 
 # Prerequisites
 *.d
