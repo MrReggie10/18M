@@ -10,6 +10,9 @@ debug/
 Release/
 release
 
+#Ignore drivers
+/Drivers
+
 # Prerequisites
 *.d
 
