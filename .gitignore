@@ -10,8 +10,8 @@ debug/
 Release/
 release
 
-#Ignore drivers
-/18M/[Dd]rivers/
+#Ignore first project
+/18M/
 
 # Prerequisites
 *.d
