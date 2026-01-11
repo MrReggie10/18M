@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "servo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,11 +113,11 @@ int main(void)
   servo_t quarterServo;
   servo_t slotServo;
 
-  pennyServo   = servo_new(&(htim2.instance->CCR1));
-  nickelServo  = servo_new(&(htim2.instance->CCR2));
-  dimeServo    = servo_new(&(htim2.instance->CCR3));
-  quarterServo = servo_new(&(htim2.instance->CCR4));
-  slotServo    = servo_new(&(htim3.instance->CCR1));
+  pennyServo   = servo_new(&(htim2.Instance->CCR1));
+  nickelServo  = servo_new(&(htim2.Instance->CCR2));
+  dimeServo    = servo_new(&(htim2.Instance->CCR3));
+  quarterServo = servo_new(&(htim2.Instance->CCR4));
+  slotServo    = servo_new(&(htim3.Instance->CCR1));
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,7 +125,14 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	servo_angle(pennyServo, 0); // Position 0 degrees
+	HAL_Delay(2000);
 
+	servo_angle(pennyServo, 90); // Position 90 degrees
+	HAL_Delay(2000);
+
+	servo_angle(pennyServo, 180); // Position 180 degrees
+	HAL_Delay(2000);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
