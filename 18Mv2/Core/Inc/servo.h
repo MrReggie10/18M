@@ -1,5 +1,12 @@
-#ifndef SERVO_H
-#define SERVO_H
+/*
+ * servo.h
+ *
+ *  Created on: Jan 11, 2026
+ *      Author: jacobyakubisin
+ */
+
+#ifndef INC_SERVO_H_
+#define INC_SERVO_H_
 
 #include "stdio.h"
 #include "main.h"
@@ -7,6 +14,9 @@
 typedef struct uint32_t *servo;
 typedef servo* servo_t;
 
+/*
+@requires ccr != NULL
+*/
 servo_t servo_new(uint32_t *ccr);
 
 /*
@@ -15,4 +25,4 @@ servo_t servo_new(uint32_t *ccr);
 */
 void servo_angle(servo_t s, uint_32 angle);
 
-#endif
+#endif /* INC_SERVO_H_ */

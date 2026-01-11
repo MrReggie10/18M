@@ -22,10 +22,10 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "servo.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "servo.h"
 
 /* USER CODE END Includes */
 
@@ -47,7 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-enum state {init, waitForCard, deposit, withdraw, thankYou};
+enum state {init, waitForCard, choose, deposit, withdraw, thankYou};
 
 /* USER CODE END PV */
 
@@ -70,7 +70,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  state = init;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/

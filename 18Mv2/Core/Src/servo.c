@@ -1,3 +1,10 @@
+/*
+ * servo.c
+ *
+ *  Created on: Jan 11, 2026
+ *      Author: jacobyakubisin
+ */
+
 #include "servo.h"
 
 servo_t servo_new(uint32_t *ccr)
