@@ -124,15 +124,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
 	servo_angle(pennyServo, 0); // Position 0 degrees
 	HAL_Delay(2000);
 
 	servo_angle(pennyServo, 90); // Position 90 degrees
 	HAL_Delay(2000);
 
-	servo_angle(pennyServo, 180); // Position 180 degrees
+    servo_angle(pennyServo, 180); // Position 180 degrees
 	HAL_Delay(2000);
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

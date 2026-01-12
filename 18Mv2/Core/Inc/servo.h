@@ -11,7 +11,7 @@
 #ifndef INC_SERVO_H_
 #define INC_SERVO_H_
 
-typedef struct uint32_t *servo;
+typedef uint32_t *servo;
 typedef servo* servo_t;
 
 /*
