@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "servo.h"
+#include "flash.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,6 +77,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  uint8_t buf[50];
 
   /* USER CODE END 1 */
 
@@ -118,26 +121,33 @@ int main(void)
   dimeServo    = servo_new(&(htim2.Instance->CCR3));
   quarterServo = servo_new(&(htim2.Instance->CCR4));
   slotServo    = servo_new(&(htim3.Instance->CCR1));
+
+  initialize_accounts();
+  set_money_in_account(0x0A844CF3, 0x11111111);
+  add_account(0x0A7593F3);
+  initialize_accounts();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	servo_angle(pennyServo, 0); // Position 0 degrees
-	HAL_Delay(2000);
 
-	servo_angle(pennyServo, 90); // Position 90 degrees
-	HAL_Delay(2000);
-
-    servo_angle(pennyServo, 180); // Position 180 degrees
-	HAL_Delay(2000);
+//	servo_angle(pennyServo, 0); // Position 0 degrees
+//	HAL_Delay(2000);
+//
+//	servo_angle(pennyServo, 90); // Position 90 degrees
+//	HAL_Delay(2000);
+//
+//    servo_angle(pennyServo, 180); // Position 180 degrees
+//	HAL_Delay(2000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
+
 
 /**
   * @brief System Clock Configuration
