@@ -43,6 +43,10 @@ uint32_t add_account(uint32_t fourbUID)
   	users[i] = *(__IO uint32_t *)addr;
   	addr += 4;
 
+  	if(users[i] == fourbUID) {
+  	  return 0xFFFFFFFF;
+  	}
+
   	money[i] = *(__IO uint32_t *)addr;
   	addr += 4;
   }
