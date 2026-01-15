@@ -8,12 +8,15 @@
 #ifndef INC_IRSENSOR_H_
 #define INC_IRSENSOR_H_
 
-GPIO_PinState ir_read_penny();
+#include "main.h"
+#include "stdio.h"
 
-GPIO_PinState ir_read_nickel();
+uint8_t ir_read_penny();
 
-GPIO_PinState ir_read_dime();
+uint8_t ir_read_nickel();
 
-GPIO_PinState ir_read_quarter();
+uint8_t ir_read_dime();
+
+uint8_t ir_read_quarter();
 
 #endif /* INC_IRSENSOR_H_ */
