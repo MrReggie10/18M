@@ -15,6 +15,51 @@
   *
   ******************************************************************************
   */
+
+  /*
+   * PIN ASSIGNMENTS:
+   *
+   * I2C for RFID Scanner:
+   * VCC - 5V
+   * GND - Breadboard ground
+   * SCL - PB6
+   * SDA - PB7
+   *
+   * SPI for LCD Display:
+   * VCC      - 3.3V
+   * GND      - Breadboard ground
+   * CS       - PB15
+   * RESET    - PB14
+   * DATA/CMD - PB12
+   * SDI/MOSI - PA7
+   * SCK      - PA5
+   * LED      - 3.3V
+   * SDO/MISO - NC
+   *
+   * T_CLK    - PA5
+   * T_CS     - PC6
+   * T_DIN    - PA7
+   * T_DO     - PB4
+   * T_IRQ    - PC8
+   *
+   * Servos:
+   * VCC  - 5V
+   * GND  - Breaboard Ground
+   * PWM1 - PA0
+   * PWM2 - PA1
+   * PWM3 - PB10
+   * PWM4 - PB2
+   * PWM5 - PA6
+   *
+   * IR Sensors:
+   * VCC  - 3.3V
+   * GND  - Breadboard Ground
+   * IQR1 - PA10
+   * IQR1 - PA11
+   * IQR1 - PA12
+   * IQR1 - PA15
+   *
+   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -25,6 +70,8 @@
 #include "flash.h"
 #include "irsensor.h"
 #include <string.h>
+#include "stm32_adafruit_lcd.h"
+#include "stm32_adafruit_ts.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +93,6 @@
 I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
-SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
@@ -65,7 +111,6 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -109,7 +154,6 @@ int main(void)
   MX_TIM3_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
-  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
@@ -130,26 +174,42 @@ int main(void)
   slotServo    = servo_new(&(htim3.Instance->CCR1));
 
   initialize_accounts();
-  set_money_in_account(0x0A844CF3, 0x11111111);
+  set_money_in_account(JACOB_UID, 0x11111111);
   add_account(0x0A7593F3);
   initialize_accounts();
+
+  uint8_t  e;
+  HAL_Delay(300);
+
+  e = BSP_LCD_Init();
+  if(e == LCD_ERROR)
+  {
+    printf("\r\nLcd Init Error\r\n");
+    while(1);
+  }
+
+  BSP_LCD_Clear(LCD_COLOR_BLACK);
+
+  BSP_LCD_SetTextColor(0x00FF0000);
+  BSP_LCD_DrawRect(50, 50, 50, 50);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	servo_angle(pennyServo, 0); // Position 0 degrees
-	HAL_Delay(2000);
-
-	servo_angle(pennyServo, 90); // Position 90 degrees
-	HAL_Delay(2000);
-
-    servo_angle(pennyServo, 180); // Position 180 degrees
-	HAL_Delay(2000);
+//	servo_angle(pennyServo, 0); // Position 0 degrees
+//	HAL_Delay(2000);
+//
+//	servo_angle(pennyServo, 90); // Position 90 degrees
+//	HAL_Delay(2000);
+//
+//    servo_angle(pennyServo, 180); // Position 180 degrees
+//	HAL_Delay(2000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -276,44 +336,6 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
-
-}
-
-/**
-  * @brief SPI2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI2_Init(void)
-{
-
-  /* USER CODE BEGIN SPI2_Init 0 */
-
-  /* USER CODE END SPI2_Init 0 */
-
-  /* USER CODE BEGIN SPI2_Init 1 */
-
-  /* USER CODE END SPI2_Init 1 */
-  /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_MASTER;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI2_Init 2 */
-
-  /* USER CODE END SPI2_Init 2 */
 
 }
 
@@ -501,6 +523,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -513,6 +538,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA10 PA11 PA12 PA15 */
   GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
