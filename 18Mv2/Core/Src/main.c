@@ -70,8 +70,9 @@
 #include "flash.h"
 #include "irsensor.h"
 #include <string.h>
-#include "stm32_adafruit_lcd.h"
-#include "stm32_adafruit_ts.h"
+//#include "stm32_adafruit_lcd.h"
+//#include "stm32_adafruit_ts.h"
+#include "claude_lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -178,26 +179,38 @@ int main(void)
   add_account(0x0A7593F3);
   initialize_accounts();
 
-  uint8_t  e;
-  HAL_Delay(300);
+//  char buf[15];
+//  strcpy((char *)buf, "Error lmao\r\n");
+//  HAL_Delay(300);
+//  BSP_LCD_Init();
+//  HAL_Delay(300);
+//  BSP_LCD_Clear(LCD_COLOR_BLACK);
+//  BSP_LCD_SetTextColor(LCD_COLOR_RED);
+//  BSP_LCD_DrawRect(50, 50, 50, 50);
+  //HAL_Delay(20);
+  ST7796S_SetSPI(&hspi1);
+  ST7796S_Init();
 
-  e = BSP_LCD_Init();
-  if(e == LCD_ERROR)
-  {
-    printf("\r\nLcd Init Error\r\n");
-    while(1);
-  }
+  // Fill screen with blue background
+  ST7796S_FillScreen(0x001F);
+  HAL_Delay(1000);
 
-  BSP_LCD_Clear(LCD_COLOR_BLACK);
+  // Draw some rectangles
+  ST7796S_FillRect(50, 50, 100, 80, 0xF800);    // Red
+  ST7796S_FillRect(200, 100, 120, 100, 0x07E0);  // Green
+  ST7796S_FillRect(100, 200, 200, 50, 0xFFE0);   // Yellow
 
-  BSP_LCD_SetTextColor(0x00FF0000);
-  BSP_LCD_DrawRect(50, 50, 50, 50);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	//strcpy((char *)buf, "Success\r\n");
+	//HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+	//HAL_Delay(20);
+
+
 //	servo_angle(pennyServo, 0); // Position 0 degrees
 //	HAL_Delay(2000);
 //

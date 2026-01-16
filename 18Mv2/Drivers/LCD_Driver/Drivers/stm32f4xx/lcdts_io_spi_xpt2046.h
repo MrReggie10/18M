@@ -8,7 +8,7 @@
 /* SPI select (0, 1, 2, 3, 4, 5, 6)
    - 0: software SPI driver (the pins assign are full free)
    - 1..6: hardware SPI driver (the LCDTS_SCK, LCDTS_MOSI, LCDTS_MISO pins are lock to hardware) */
-#define LCDTS_SPI         1
+#define LCDTS_SPI         0
 
 /* LCD SPI mode
    - 0: only TX (only to write on the display)
@@ -46,7 +46,7 @@
 
 /* When data direction change (OUT->IN) there is a display that requires extra clock
    example ST7735: 1, ILI9341: 0 */
-#define LCD_SCK_EXTRACLK  0
+#define LCD_SCK_EXTRACLK  1
 
 /* DMA settings (only hardware SPI)
    - 0..2: 0 = no DMA, 1 = DMA1, 2 = DMA2
