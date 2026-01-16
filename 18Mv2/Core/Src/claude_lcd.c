@@ -6,6 +6,7 @@
  */
 
 #include "claude_lcd.h"
+#include "stm32f4xx_hal.h"
 
 static SPI_HandleTypeDef *lcd_spi;  // Private pointer to SPI handle
 

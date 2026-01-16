@@ -36,11 +36,14 @@
    * LED      - 3.3V
    * SDO/MISO - NC
    *
+   * OUT OF DATE:
+   * *****************
    * T_CLK    - PA5
-   * T_CS     - PC6
+   * T_CS     - PC6 this one is fine
    * T_DIN    - PA7
    * T_DO     - PB4
-   * T_IRQ    - PC8
+   * T_IRQ    - PC8 this one is fine
+   * *****************
    *
    * Servos:
    * VCC  - 5V
@@ -73,6 +76,7 @@
 //#include "stm32_adafruit_lcd.h"
 //#include "stm32_adafruit_ts.h"
 #include "claude_lcd.h"
+#include "claude_touch.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -94,6 +98,7 @@
 I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
@@ -112,6 +117,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -155,6 +161,7 @@ int main(void)
   MX_TIM3_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
@@ -174,31 +181,32 @@ int main(void)
   quarterServo = servo_new(&(htim2.Instance->CCR4));
   slotServo    = servo_new(&(htim3.Instance->CCR1));
 
-  initialize_accounts();
-  set_money_in_account(JACOB_UID, 0x11111111);
-  add_account(0x0A7593F3);
-  initialize_accounts();
+//  initialize_accounts();
+//  set_money_in_account(JACOB_UID, 0x11111111);
+//  add_account(0x0A7593F3);
+//  initialize_accounts();
 
-//  char buf[15];
-//  strcpy((char *)buf, "Error lmao\r\n");
-//  HAL_Delay(300);
-//  BSP_LCD_Init();
-//  HAL_Delay(300);
-//  BSP_LCD_Clear(LCD_COLOR_BLACK);
-//  BSP_LCD_SetTextColor(LCD_COLOR_RED);
-//  BSP_LCD_DrawRect(50, 50, 50, 50);
-  //HAL_Delay(20);
+//  ST7796S_SetSPI(&hspi1);
+//  ST7796S_Init();
+//
+//  // Fill screen with blue background
+//  ST7796S_FillScreen(0x001F);
+//  HAL_Delay(1000);
+//
+//  // Draw some rectangles
+//  ST7796S_FillRect(50, 50, 100, 80, 0xF800);    // Red
+//  ST7796S_FillRect(200, 100, 120, 100, 0x07E0);  // Green
+//  ST7796S_FillRect(100, 200, 200, 50, 0xFFE0);   // Yellow
   ST7796S_SetSPI(&hspi1);
+  XPT2046_SetSPI(&hspi2);
+  XPT2046_SetUART(&huart2);
   ST7796S_Init();
+  XPT2046_Init();
 
-  // Fill screen with blue background
-  ST7796S_FillScreen(0x001F);
-  HAL_Delay(1000);
+  ST7796S_FillScreen(0x0000);  // Black background
 
-  // Draw some rectangles
-  ST7796S_FillRect(50, 50, 100, 80, 0xF800);    // Red
-  ST7796S_FillRect(200, 100, 120, 100, 0x07E0);  // Green
-  ST7796S_FillRect(100, 200, 200, 50, 0xFFE0);   // Yellow
+  // Optional: Run calibration
+  XPT2046_Calibrate();
 
   /* USER CODE END 2 */
 
@@ -349,6 +357,44 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
 
 }
 
