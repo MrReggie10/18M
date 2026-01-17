@@ -7,23 +7,24 @@
 #include "irsensor.h"
 #include "stdio.h"
 #include "main.h"
+#include "stm32f4xx_hal.h"
 
-uint8_t ir_read_penny()
+GPIO_PinState ir_read_penny()
 {
-  return (uint8_t) HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+  return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
 }
 
-uint8_t ir_read_nickel()
+GPIO_PinState ir_read_nickel()
 {
-  return (uint8_t) HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12);
+  return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12);
 }
 
-uint8_t ir_read_dime()
+GPIO_PinState ir_read_dime()
 {
-  return (uint8_t) HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+  return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
 }
 
-uint8_t ir_read_quarter()
+GPIO_PinState ir_read_quarter()
 {
-  return (uint8_t) HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10);
+  return HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10);
 }

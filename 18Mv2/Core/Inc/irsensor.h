@@ -12,12 +12,12 @@
 #include "stdio.h"
 #include <stdint.h>
 
-uint8_t ir_read_penny();
+GPIO_PinState ir_read_penny();
 
-uint8_t ir_read_nickel();
+GPIO_PinState ir_read_nickel();
 
-uint8_t ir_read_dime();
+GPIO_PinState ir_read_dime();
 
-uint8_t ir_read_quarter();
+GPIO_PinState ir_read_quarter();
 
 #endif /* INC_IRSENSOR_H_ */

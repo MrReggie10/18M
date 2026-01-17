@@ -74,8 +74,6 @@
 #include "irsensor.h"
 #include <string.h>
 #include "stm32f4xx_hal.h"
-//#include "stm32_adafruit_lcd.h"
-//#include "stm32_adafruit_ts.h"
 #include "claude_lcd.h"
 #include "claude_touch.h"
 #include "rfid.h"
@@ -108,6 +106,24 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+servo_t pennyServo;
+servo_t nickelServo;
+servo_t dimeServo;
+servo_t quarterServo;
+servo_t slotServo;
+
+pn532_t nfc;
+pn532_tag_info_t tag;
+
+enum {SPLASH, USE, THANKYOU} state;
+
+uint32_t currentUser;
+uint32_t currentMoney;
+
+char buf[32];
+
+TouchPoint tp;
 
 /* USER CODE END PV */
 
@@ -166,20 +182,15 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
-/**********************************************
-********** SERVO INITIALIZATION **************
-**********************************************/
+/*********************************************
+ ********* SERVO INITIALIZATION **************
+ *********************************************/
+
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-
-  servo_t pennyServo;
-  servo_t nickelServo;
-  servo_t dimeServo;
-  servo_t quarterServo;
-  servo_t slotServo;
 
   pennyServo   = servo_new(&(htim2.Instance->CCR1));
   nickelServo  = servo_new(&(htim2.Instance->CCR2));
@@ -187,10 +198,11 @@ int main(void)
   quarterServo = servo_new(&(htim2.Instance->CCR4));
   slotServo    = servo_new(&(htim3.Instance->CCR1));
 
-/**********************************************
-*********** FLASH INITIALIZATION **************
-**********************************************/
-//  initialize_accounts();
+/*********************************************
+ ********** FLASH INITIALIZATION *************
+ *********************************************/
+
+  initialize_accounts();
 //  set_money_in_account(JACOB_UID, 0x11111111);
 //  add_account(0x0A7593F3);
 //  initialize_accounts();
@@ -207,7 +219,10 @@ int main(void)
 //  ST7796S_FillRect(200, 100, 120, 100, 0x07E0);  // Green
 //  ST7796S_FillRect(100, 200, 200, 50, 0xFFE0);   // Yellow
 
-  // Initialize
+/*********************************************
+ ********* LCD+TOUCH INITIALIZATION **********
+ *********************************************/
+
   ST7796S_SetSPI(&hspi1);
   XPT2046_SetSPI(&hspi2);
   XPT2046_SetUART(&huart2);
@@ -215,11 +230,11 @@ int main(void)
   ST7796S_Init();
   XPT2046_Init();
 
-  ST7796S_FillScreen(0x0000);  // Black background
+  //ST7796S_FillScreen(0x0000);  // Black background
 
   // Optional: Run calibration
   //XPT2046_Calibrate();
-  ST7796S_DrawString(10, 10, "Hello World!", &Font24, WHITE, BLACK);
+  //ST7796S_DrawString(10, 10, "Hello World!", &Font24, WHITE, BLACK);
 
   // SERVO CODE
 //  servo_angle(pennyServo, 180);
@@ -240,39 +255,43 @@ int main(void)
 //  servo_angle(quarterServo, 180);
 //  HAL_Delay(2000);
 
-  // RFID CODE
-  pn532_t nfc;
-  pn532_tag_info_t tag;
-  char buf[15];
+/*********************************************
+ *********** RFID INITIALIZATION *************
+ *********************************************/
 
   pn532_SetUART(&huart2);
-  if (pn532_init(&nfc, &hi2c1) == PN532_OK) {
-    strcpy((char *)buf, "in loop\r\n");
-	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
-	while (1) {
-	  if (pn532_read_passive_target(&nfc, &tag, 500) == PN532_OK) {
-			  // Tag detected! UID is in tag.uid with length tag.uid_len
-			  // Example: Print UID
-		strcpy((char *)buf, "UID: ");
-		HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
-		for (int i = 0; i < tag.uid_len; i++) {
-			  //     printf("%02X ", tag.uid[i]);
-		  sprintf(buf, "%02X ", tag.uid[i]);
-		  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
-			  // }
-			  // printf("\n");
-		}
-		HAL_Delay(100);
-	  }
-	}
-  }
 
+/*********************************************
+ *********** STATE INITIALIZATION ************
+ *********************************************/
+
+  state = SPLASH;
+
+
+  if (pn532_init(&nfc, &hi2c1) != PN532_OK) {
+	ST7796S_FillScreen(WHITE);
+    ST7796S_DrawString(10, 100, "Error RFID init", &Font24, BLACK, WHITE);
+    ST7796S_DrawString(20, 124, "please reflash", &Font24, BLACK, WHITE);
+    while(1);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    switch (state)
+    {
+      case SPLASH:
+    	Splash_Screen();
+      break;
+      case USE:
+        Use_Screen();
+      break;
+      case THANKYOU:
+        //yes
+      break;
+    }
 	//strcpy((char *)buf, "Success\r\n");
 	//HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
 	//HAL_Delay(20);
@@ -301,6 +320,124 @@ int main(void)
 
   }
   /* USER CODE END 3 */
+}
+
+void Splash_Screen(void)
+{
+  ST7796S_FillScreen(WHITE);
+
+  ST7796S_DrawString(10, 100, "Please scan your", &Font24, BLACK, WHITE);
+  ST7796S_DrawString(10, 122, "andrewID card to", &Font24, BLACK, WHITE);
+  ST7796S_DrawString(20, 144, "     begin", &Font24, BLACK, WHITE);
+  //HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+  while (1) {
+    if (pn532_read_passive_target(&nfc, &tag, 500) == PN532_OK) {
+
+  	  break;
+    }
+  }
+//  strcpy((char *)buf, "UID: ");
+//  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+//  for (int i = 0; i < tag.uid_len; i++) {
+//	sprintf(buf, "%02X ", tag.uid[i]);
+//	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+//  }
+
+  currentUser = tag.uid[0];
+  currentUser = currentUser<<8;
+  currentUser = currentUser|tag.uid[1];
+  currentUser = currentUser<<8;
+  currentUser = currentUser|tag.uid[2];
+  currentUser = currentUser<<8;
+  currentUser = currentUser|tag.uid[3];
+
+  sprintf(buf, "%x\r\n", get_money_in_account(currentUser));
+  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+
+  if(get_money_in_account(currentUser) == 0xFFFFFFFF) {
+	strcpy((char *)buf, "New user");
+	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+
+	add_account(currentUser);
+  }
+
+  HAL_Delay(50);
+
+  currentMoney = get_money_in_account(currentUser);
+
+  const uint16_t LBLUE = RGB565(0xDF, 0xDF, 0xFF);
+
+  ST7796S_FillScreen(LBLUE);
+  ST7796S_DrawString(90, 20, "Welcome!", &Font24, BLACK, LBLUE);
+  if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+  else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+  ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+  ST7796S_DrawString(0, 76, "To deposit, slide\ncoins through the\nslot.\nTo withdraw, press\na button below.", &Font24, BLACK, LBLUE);
+
+  ST7796S_FillRect(20, 228, 130, 50, BLUE);
+  ST7796S_DrawString(40, 241, "Penny", &Font24, BLACK, BLUE);
+  ST7796S_FillRect(170, 228, 130, 50, BLUE);
+  ST7796S_DrawString(180, 241, "Nickel", &Font24, BLACK, BLUE);
+  ST7796S_FillRect(20, 298, 130, 50, BLUE);
+  ST7796S_DrawString(50, 311, "Dime", &Font24, BLACK, BLUE);
+  ST7796S_FillRect(170, 298, 130, 50, BLUE);
+  ST7796S_DrawString(175, 311, "Quarter", &Font24, BLACK, BLUE);
+
+  ST7796S_FillRect(20, 410, 130, 50, BLUE);
+  ST7796S_DrawString(30, 423, "< Exit", &Font24, BLACK, BLUE);
+
+  state = USE;
+}
+
+void Use_Screen()
+{
+  const uint16_t LBLUE = RGB565(0xDF, 0xDF, 0xFF);
+
+  if(ir_read_penny() == GPIO_PIN_RESET)
+  {
+	currentMoney++;
+	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+  }
+  if(ir_read_nickel() == GPIO_PIN_RESET)
+  {
+	currentMoney+=5;
+	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+  }
+  if(ir_read_dime() == GPIO_PIN_RESET)
+  {
+	currentMoney+=10;
+	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+  }
+  if(ir_read_quarter() == GPIO_PIN_RESET)
+  {
+	currentMoney+=25;
+	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+  }
+
+
+  tp = XPT2046_GetTouchAvg();
+
+  if(tp.touched) {
+	uint16_t screen_x, screen_y;
+	XPT2046_GetScreenCoordinates(&tp, &screen_y, &screen_x);
+
+	// Draw a small circle where touched
+	ST7796S_FillRect(screen_y - 2, screen_x - 2, 5, 5, BLACK);
+
+	// Display coordinates
+	sprintf(buf, "X:%d Y:%d\r\n", screen_x, screen_y);
+	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+  }
+
+  HAL_Delay(50);
 }
 
 /**

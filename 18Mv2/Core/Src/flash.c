@@ -34,15 +34,13 @@ uint32_t add_account(uint32_t fourbUID)
 
   for(uint32_t i = 0; i < numUsers-1; i++)
   {
-  	users[i] = *(__IO uint32_t *)addr;
-  	addr += 4;
+  	users[i] = *(__IO uint32_t *)(addr+(8*i));
 
   	if(users[i] == fourbUID) {
   	  return 0xFFFFFFFF;
   	}
 
-  	money[i] = *(__IO uint32_t *)addr;
-  	addr += 4;
+  	money[i] = *(__IO uint32_t *)(addr+(8*i)+4);
   }
   users[numUsers-1] = fourbUID;
   addr += 4;
@@ -89,11 +87,10 @@ uint32_t get_money_in_account(uint32_t fourbUID)
 
   for(uint32_t i = 0; i < numUsers; i++)
   {
-	currentUser = *(__IO uint32_t *)addr;
+	currentUser = *(__IO uint32_t *)(addr+(8*i));
 	if(currentUser == fourbUID) {
 	  return *(__IO uint32_t *)(addr+4);
 	}
-	addr += 8;
   }
 
   return 0xFFFFFFFF;
@@ -178,25 +175,25 @@ uint32_t reset_accounts()
   addr += 4;
   if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, JACOB_UID) != HAL_OK) return HAL_FLASH_GetError();
   addr += 4;
-  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000064) != HAL_OK) return HAL_FLASH_GetError();
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000100) != HAL_OK) return HAL_FLASH_GetError();
 
   // write UID for Cameron
   addr += 4;
   if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, CAMERON_UID) != HAL_OK) return HAL_FLASH_GetError();
   addr += 4;
-  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000064) != HAL_OK) return HAL_FLASH_GetError();
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000100) != HAL_OK) return HAL_FLASH_GetError();
 
   // write UID for Amy
   addr += 4;
   if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, AMY_UID) != HAL_OK) return HAL_FLASH_GetError();
   addr += 4;
-  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000064) != HAL_OK) return HAL_FLASH_GetError();
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000100) != HAL_OK) return HAL_FLASH_GetError();
 
   // write UID for Derek
   addr += 4;
   if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, DEREK_UID) != HAL_OK) return HAL_FLASH_GetError();
   addr += 4;
-  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000064) != HAL_OK) return HAL_FLASH_GetError();
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000100) != HAL_OK) return HAL_FLASH_GetError();
 
   HAL_FLASH_Lock();
 

@@ -123,7 +123,6 @@ static int pn532_write_command(pn532_t *dev, const uint8_t *cmd, uint8_t cmd_len
 // Helper: Read response from PN532
 static int pn532_read_response(pn532_t *dev, uint8_t *buf, uint8_t len, uint32_t timeout_ms) {
 	if (pn532_wait_ready(dev, timeout_ms) != PN532_OK) {
-      ST7796S_DrawString(10, 10, "Nuh uh timeout", &Font24, WHITE, BLACK);
 	  return PN532_TIMEOUT;
 	}
 
@@ -261,9 +260,6 @@ int pn532_read_passive_target(pn532_t *dev, pn532_tag_info_t *tag_info, uint32_t
 
     // Check if tag was found
     if (response[1] != 0x01) {  // Number of targets
-        char buf[15];
-    	sprintf(buf, "%x\r\n", response[0]);
-    	HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
         return PN532_NO_TAG;
     }
 
@@ -278,9 +274,6 @@ int pn532_read_passive_target(pn532_t *dev, pn532_tag_info_t *tag_info, uint32_t
     }
 
     memcpy(tag_info->uid, &response[7], tag_info->uid_len);
-    char buf[15];
-	sprintf(buf, "ok\r\n");
-	HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
 
     return PN532_OK;
 }
