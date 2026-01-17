@@ -180,7 +180,6 @@ int main(void)
   dimeServo    = servo_new(&(htim2.Instance->CCR3));
   quarterServo = servo_new(&(htim2.Instance->CCR4));
   slotServo    = servo_new(&(htim3.Instance->CCR1));
-
 //  initialize_accounts();
 //  set_money_in_account(JACOB_UID, 0x11111111);
 //  add_account(0x0A7593F3);
@@ -206,7 +205,26 @@ int main(void)
   ST7796S_FillScreen(0x0000);  // Black background
 
   // Optional: Run calibration
-  XPT2046_Calibrate();
+  //XPT2046_Calibrate();
+  ST7796S_DrawString(10, 10, "Hello World!", &Font24, WHITE, BLACK);
+
+  servo_angle(pennyServo, 180);
+  servo_angle(nickelServo, 180);
+  servo_angle(dimeServo, 180);
+  servo_angle(quarterServo, 180);
+  HAL_Delay(2000);
+
+  servo_angle(pennyServo, 60);
+  servo_angle(nickelServo, 60);
+  servo_angle(dimeServo, 60);
+  servo_angle(quarterServo, 60);
+  HAL_Delay(2000);
+
+  servo_angle(pennyServo, 180);
+  servo_angle(nickelServo, 180);
+  servo_angle(dimeServo, 180);
+  servo_angle(quarterServo, 180);
+  HAL_Delay(2000);
 
   /* USER CODE END 2 */
 
@@ -219,13 +237,22 @@ int main(void)
 	//HAL_Delay(20);
 
 
-//	servo_angle(pennyServo, 0); // Position 0 degrees
+//    servo_angle(pennyServo, 180);
+//	servo_angle(nickelServo, 180);
+//	servo_angle(dimeServo, 180);
+//	servo_angle(quarterServo, 180);
 //	HAL_Delay(2000);
 //
-//	servo_angle(pennyServo, 90); // Position 90 degrees
+//	servo_angle(pennyServo, 90);
+//	servo_angle(nickelServo, 90);
+//	servo_angle(dimeServo, 90);
+//	servo_angle(quarterServo, 90);
 //	HAL_Delay(2000);
 //
-//    servo_angle(pennyServo, 180); // Position 180 degrees
+//	servo_angle(pennyServo, 180);
+//	servo_angle(nickelServo, 180);
+//	servo_angle(dimeServo, 180);
+//	servo_angle(quarterServo, 180);
 //	HAL_Delay(2000);
     /* USER CODE END WHILE */
 

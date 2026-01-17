@@ -9,6 +9,8 @@
 #define INC_CLAUDE_LCD_H_
 
 #include "stm32f4xx_hal.h"
+#include <stdint.h>
+#include "font.h"
 
 // Common colors in RGB565:
 #define BLACK   0x0000
@@ -29,5 +31,15 @@ void ST7796S_FillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t c
 void ST7796S_WriteCommand(uint8_t cmd);
 void ST7796S_WriteData(uint8_t data);
 void ST7796S_WriteData16(uint16_t data);
+
+void ST7796S_DrawChar(uint16_t x, uint16_t y, char c, const Font *font,
+                      uint16_t color, uint16_t bg_color);
+void ST7796S_DrawString(uint16_t x, uint16_t y, const char *str, const Font *font,
+                        uint16_t color, uint16_t bg_color);
+void ST7796S_DrawInt(uint16_t x, uint16_t y, int32_t num, const Font *font,
+                     uint16_t color, uint16_t bg_color);
+void ST7796S_DrawFloat(uint16_t x, uint16_t y, float num, uint8_t decimals,
+                       const Font *font, uint16_t color, uint16_t bg_color);
+uint16_t ST7796S_GetStringWidth(const char *str, const Font *font);
 
 #endif /* INC_CLAUDE_LCD_H_ */
