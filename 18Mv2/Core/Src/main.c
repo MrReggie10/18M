@@ -73,10 +73,12 @@
 #include "flash.h"
 #include "irsensor.h"
 #include <string.h>
+#include "stm32f4xx_hal.h"
 //#include "stm32_adafruit_lcd.h"
 //#include "stm32_adafruit_ts.h"
 #include "claude_lcd.h"
 #include "claude_touch.h"
+#include "rfid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -208,23 +210,51 @@ int main(void)
   //XPT2046_Calibrate();
   ST7796S_DrawString(10, 10, "Hello World!", &Font24, WHITE, BLACK);
 
-  servo_angle(pennyServo, 180);
-  servo_angle(nickelServo, 180);
-  servo_angle(dimeServo, 180);
-  servo_angle(quarterServo, 180);
-  HAL_Delay(2000);
+  // SERVO CODE
+//  servo_angle(pennyServo, 180);
+//  servo_angle(nickelServo, 180);
+//  servo_angle(dimeServo, 180);
+//  servo_angle(quarterServo, 180);
+//  HAL_Delay(2000);
+//
+//  servo_angle(pennyServo, 60);
+//  servo_angle(nickelServo, 60);
+//  servo_angle(dimeServo, 60);
+//  servo_angle(quarterServo, 60);
+//  HAL_Delay(2000);
+//
+//  servo_angle(pennyServo, 180);
+//  servo_angle(nickelServo, 180);
+//  servo_angle(dimeServo, 180);
+//  servo_angle(quarterServo, 180);
+//  HAL_Delay(2000);
 
-  servo_angle(pennyServo, 60);
-  servo_angle(nickelServo, 60);
-  servo_angle(dimeServo, 60);
-  servo_angle(quarterServo, 60);
-  HAL_Delay(2000);
+  // RFID CODE
+  pn532_t nfc;
+  pn532_tag_info_t tag;
+  char buf[15];
 
-  servo_angle(pennyServo, 180);
-  servo_angle(nickelServo, 180);
-  servo_angle(dimeServo, 180);
-  servo_angle(quarterServo, 180);
-  HAL_Delay(2000);
+  pn532_SetI2C(&hi2c1);
+  if (pn532_init(&nfc, &hi2c1) == PN532_OK) {
+	while (1) {
+	  strcpy((char *)buf, "Init done\r\n");
+	  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+	  if (pn532_read_passive_target(&nfc, &tag, 500) == PN532_OK) {
+			  // Tag detected! UID is in tag.uid with length tag.uid_len
+			  // Example: Print UID
+		strcpy((char *)buf, "UID: ");
+		HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+		for (int i = 0; i < tag.uid_len; i++) {
+			  //     printf("%02X ", tag.uid[i]);
+		  sprintf(buf, "%02X ", tag.uid[i]);
+		  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+			  // }
+			  // printf("\n");
+		}
+		HAL_Delay(100);
+	  }
+	}
+  }
 
   /* USER CODE END 2 */
 
@@ -331,7 +361,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.ClockSpeed = 400000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;

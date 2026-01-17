@@ -8,33 +8,57 @@
 #ifndef INC_RFID_H_
 #define INC_RFID_H_
 
-#include "stdio.h"
-#include "main.h"
+#include "stm32f4xx_hal.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-void rfid_init();
+// PN532 Commands
+#define PN532_CMD_GETFIRMWAREVERSION    0x02
+#define PN532_CMD_SAMCONFIGURATION      0x14
+#define PN532_CMD_INLISTPASSIVETARGET   0x4A
 
-uint8_t *rfid_read();
+// PN532 Frame identifiers
+#define PN532_PREAMBLE                  0x00
+#define PN532_STARTCODE1                0x00
+#define PN532_STARTCODE2                0xFF
+#define PN532_POSTAMBLE                 0x00
+#define PN532_HOSTTOPN532               0xD4
+#define PN532_PN532TOHOST               0xD5
 
-#define PN532_PREAMBLE (0x00)   ///< Command sequence start, byte 1/3
-#define PN532_STARTCODE1 (0x00) ///< Command sequence start, byte 2/3
-#define PN532_STARTCODE2 (0xFF) ///< Command sequence start, byte 3/3
-#define PN532_POSTAMBLE (0x00)  ///< EOD
+// I2C Address (7-bit address shifted left)
+#define PN532_I2C_ADDRESS               (0x24 << 1)
 
-#define PN532_HOSTTOPN532 (0xD4) ///< Host-to-PN532
-#define PN532_PN532TOHOST (0xD5) ///< PN532-to-host
+// Timeouts
+#define PN532_I2C_TIMEOUT               100
+#define PN532_ACK_WAIT_TIME             50
 
-#define PN532_COMMAND_GETFIRMWAREVERSION (0x02)    ///< Get firmware version
-#define PN532_COMMAND_INLISTPASSIVETARGET (0x4A)   ///< List passive target
-#define PN532_COMMAND_SAMCONFIGURATION (0x14)      ///< SAM configuration
+// Max UID length
+#define PN532_MAX_UID_LENGTH            10
 
-#define PN532_I2C_ADDRESS (0x48 >> 1) ///< Default I2C address
-#define PN532_I2C_READBIT (0x01)      ///< Read bit
-#define PN532_I2C_BUSY (0x00)         ///< Busy
-#define PN532_I2C_READY (0x01)        ///< Ready
-#define PN532_I2C_READYTIMEOUT (20)   ///< Ready timeout
+// Return codes
+#define PN532_OK                        0
+#define PN532_ERROR                     -1
+#define PN532_TIMEOUT                   -2
+#define PN532_NO_TAG                    -3
 
-#define PN532_MIFARE_ISO14443A (0x00) ///< MiFare
+// PN532 handle structure
+typedef struct {
+    I2C_HandleTypeDef *hi2c;
+} pn532_t;
 
-#define PN532DEBUGPRINT Serial ///< Fixed name for debug Serial instance
+// Tag information structure
+typedef struct {
+    uint8_t uid[PN532_MAX_UID_LENGTH];
+    uint8_t uid_len;
+    uint8_t sak;
+    uint16_t atqa;
+} pn532_tag_info_t;
 
-#endif /* INC_RFID_H_ */
+// Public API
+void pn532_SetI2C(I2C_HandleTypeDef *hi2c);
+int pn532_init(pn532_t *dev, I2C_HandleTypeDef *hi2c);
+int pn532_get_firmware_version(pn532_t *dev, uint32_t *version);
+int pn532_sam_config(pn532_t *dev);
+int pn532_read_passive_target(pn532_t *dev, pn532_tag_info_t *tag_info, uint32_t timeout_ms);
+
+#endif // PN532_H
