@@ -165,6 +165,10 @@ int main(void)
   MX_SPI1_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
+
+/**********************************************
+********** SERVO INITIALIZATION **************
+**********************************************/
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
@@ -182,6 +186,10 @@ int main(void)
   dimeServo    = servo_new(&(htim2.Instance->CCR3));
   quarterServo = servo_new(&(htim2.Instance->CCR4));
   slotServo    = servo_new(&(htim3.Instance->CCR1));
+
+/**********************************************
+*********** FLASH INITIALIZATION **************
+**********************************************/
 //  initialize_accounts();
 //  set_money_in_account(JACOB_UID, 0x11111111);
 //  add_account(0x0A7593F3);
@@ -198,9 +206,12 @@ int main(void)
 //  ST7796S_FillRect(50, 50, 100, 80, 0xF800);    // Red
 //  ST7796S_FillRect(200, 100, 120, 100, 0x07E0);  // Green
 //  ST7796S_FillRect(100, 200, 200, 50, 0xFFE0);   // Yellow
+
+  // Initialize
   ST7796S_SetSPI(&hspi1);
   XPT2046_SetSPI(&hspi2);
   XPT2046_SetUART(&huart2);
+
   ST7796S_Init();
   XPT2046_Init();
 
@@ -234,11 +245,11 @@ int main(void)
   pn532_tag_info_t tag;
   char buf[15];
 
-  pn532_SetI2C(&hi2c1);
+  pn532_SetUART(&huart2);
   if (pn532_init(&nfc, &hi2c1) == PN532_OK) {
+    strcpy((char *)buf, "in loop\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
 	while (1) {
-	  strcpy((char *)buf, "Init done\r\n");
-	  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
 	  if (pn532_read_passive_target(&nfc, &tag, 500) == PN532_OK) {
 			  // Tag detected! UID is in tag.uid with length tag.uid_len
 			  // Example: Print UID

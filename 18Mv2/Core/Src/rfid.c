@@ -8,13 +8,13 @@
 #include <string.h>
 #include "claude_lcd.h"
 
-static I2C_HandleTypeDef *rfid_i2c;  // Private pointer to SPI handle
-
 // ACK frame
 static const uint8_t PN532_ACK[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
-void pn532_SetI2C(I2C_HandleTypeDef *hi2c) {
-    rfid_i2c = hi2c;
+static UART_HandleTypeDef *rfid_uart;  // Private pointer to SPI handle
+
+void pn532_SetUART(UART_HandleTypeDef *huart) {
+    rfid_uart = huart;
 }
 
 // Helper: Calculate checksum
@@ -45,7 +45,7 @@ static int pn532_wait_ready(pn532_t *dev, uint32_t timeout_ms) {
 
 // Helper: Read ACK frame
 static int pn532_read_ack(pn532_t *dev) {
-    uint8_t ack[6];
+    uint8_t ack[7];
 
     HAL_Delay(PN532_ACK_WAIT_TIME);
 
@@ -53,15 +53,28 @@ static int pn532_read_ack(pn532_t *dev) {
         return PN532_TIMEOUT;
     }
 
-    if (HAL_I2C_Master_Receive(dev->hi2c, PN532_I2C_ADDRESS, ack, 6,
+    if (HAL_I2C_Master_Receive(dev->hi2c, PN532_I2C_ADDRESS, ack, 7,
                                PN532_I2C_TIMEOUT) != HAL_OK) {
         return PN532_ERROR;
     }
 
-    if (memcmp(ack, PN532_ACK, 6) != 0) {
-    	char buf[64];
-		sprintf(buf, "%x%x%x%x%x%x\r\n", ack[0], ack[1], ack[2], ack[3], ack[4], ack[5]);
-    	ST7796S_DrawString(10, 10, buf, &Font24, WHITE, BLACK);
+    if (memcmp(&ack[1], PN532_ACK, 6) != 0) {
+    	char buf[15];
+		sprintf(buf, "%x\r\n", ack[0]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", ack[1]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", ack[2]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", ack[3]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", ack[4]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", ack[5]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", ack[6]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+//    	ST7796S_DrawString(10, 10, buf, &Font24, WHITE, BLACK);
         return PN532_ERROR;
     }
 
@@ -109,37 +122,48 @@ static int pn532_write_command(pn532_t *dev, const uint8_t *cmd, uint8_t cmd_len
 
 // Helper: Read response from PN532
 static int pn532_read_response(pn532_t *dev, uint8_t *buf, uint8_t len, uint32_t timeout_ms) {
-    if (pn532_wait_ready(dev, timeout_ms) != PN532_OK) {
-        return PN532_TIMEOUT;
-    }
+	if (pn532_wait_ready(dev, timeout_ms) != PN532_OK) {
+      ST7796S_DrawString(10, 10, "Nuh uh timeout", &Font24, WHITE, BLACK);
+	  return PN532_TIMEOUT;
+	}
 
     uint8_t frame[64];
-    uint8_t frame_len = len + 8;  // Data + overhead
+    uint8_t frame_len = len + 9;  // Data + overhead
 
     if (HAL_I2C_Master_Receive(dev->hi2c, PN532_I2C_ADDRESS, frame, frame_len,
                                PN532_I2C_TIMEOUT) != HAL_OK) {
+    	ST7796S_DrawString(10, 10, "Nuh uh receive", &Font24, WHITE, BLACK);
         return PN532_ERROR;
     }
 
     // Verify frame structure
-    if (frame[0] != PN532_PREAMBLE || frame[1] != PN532_STARTCODE1 ||
-        frame[2] != PN532_STARTCODE2) {
+    if (frame[1] != PN532_PREAMBLE || frame[2] != PN532_STARTCODE1 ||
+        frame[3] != PN532_STARTCODE2) {
+    	char buf[15];
+		sprintf(buf, "%x\r\n", frame[0]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", frame[1]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
+		sprintf(buf, "%x\r\n", frame[2]);
+		HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
         return PN532_ERROR;
     }
 
-    uint8_t length = frame[3];
-    uint8_t lcs = frame[4];
+    uint8_t length = frame[4];
+    uint8_t lcs = frame[5];
 
     if ((uint8_t)(length + lcs) != 0) {
+    	ST7796S_DrawString(10, 10, "Nuh uh wtf", &Font24, WHITE, BLACK);
         return PN532_ERROR;
     }
 
-    if (frame[5] != PN532_PN532TOHOST) {
+    if (frame[6] != PN532_PN532TOHOST) {
+    	ST7796S_DrawString(10, 10, "Nuh uh host", &Font24, WHITE, BLACK);
         return PN532_ERROR;
     }
 
     // Copy data
-    memcpy(buf, &frame[6], len);
+    memcpy(buf, &frame[7], len);
 
     return PN532_OK;
 }
@@ -182,7 +206,6 @@ int pn532_get_firmware_version(pn532_t *dev, uint32_t *version) {
     }
 
     if (pn532_read_response(dev, response, sizeof(response), 1000) != PN532_OK) {
-    	ST7796S_DrawString(10, 10, "Nuh uh read", &Font24, WHITE, BLACK);
         return PN532_ERROR;
         return PN532_ERROR;
     }
@@ -228,6 +251,7 @@ int pn532_read_passive_target(pn532_t *dev, pn532_tag_info_t *tag_info, uint32_t
     uint8_t response[32];
 
     if (pn532_write_command(dev, cmd, sizeof(cmd)) != PN532_OK) {
+    	ST7796S_DrawString(10, 10, "Nuh uh write", &Font24, WHITE, BLACK);
         return PN532_ERROR;
     }
 
@@ -236,20 +260,27 @@ int pn532_read_passive_target(pn532_t *dev, pn532_tag_info_t *tag_info, uint32_t
     }
 
     // Check if tag was found
-    if (response[0] != 0x01) {  // Number of targets
+    if (response[1] != 0x01) {  // Number of targets
+        char buf[15];
+    	sprintf(buf, "%x\r\n", response[0]);
+    	HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
         return PN532_NO_TAG;
     }
 
     // Parse response
-    tag_info->atqa = (response[2] << 8) | response[3];
-    tag_info->sak = response[4];
-    tag_info->uid_len = response[5];
+    tag_info->atqa = (response[3] << 8) | response[4];
+    tag_info->sak = response[5];
+    tag_info->uid_len = response[6];
 
     if (tag_info->uid_len > PN532_MAX_UID_LENGTH) {
+    	ST7796S_DrawString(10, 10, "Nuh uh uidlen", &Font24, WHITE, BLACK);
         return PN532_ERROR;
     }
 
-    memcpy(tag_info->uid, &response[6], tag_info->uid_len);
+    memcpy(tag_info->uid, &response[7], tag_info->uid_len);
+    char buf[15];
+	sprintf(buf, "ok\r\n");
+	HAL_UART_Transmit(rfid_uart, (uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
 
     return PN532_OK;
 }

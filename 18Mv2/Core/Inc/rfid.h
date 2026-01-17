@@ -55,7 +55,7 @@ typedef struct {
 } pn532_tag_info_t;
 
 // Public API
-void pn532_SetI2C(I2C_HandleTypeDef *hi2c);
+void pn532_SetUART(UART_HandleTypeDef *huart);
 int pn532_init(pn532_t *dev, I2C_HandleTypeDef *hi2c);
 int pn532_get_firmware_version(pn532_t *dev, uint32_t *version);
 int pn532_sam_config(pn532_t *dev);
