@@ -295,7 +295,7 @@ void Use_Screen()
 		if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 		else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-		servo_angle(pennyServo, 45);
+		servo_angle(pennyServo, 35);
 		HAL_Delay(500);
 		servo_angle(pennyServo, 170);
 	  }
@@ -309,7 +309,7 @@ void Use_Screen()
 		if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 		else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-		servo_angle(nickelServo, 45);
+		servo_angle(nickelServo, 35);
 		HAL_Delay(500);
 		servo_angle(nickelServo, 170);
 	  }
@@ -323,7 +323,7 @@ void Use_Screen()
 		if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 		else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-		servo_angle(dimeServo, 45);
+		servo_angle(dimeServo, 35);
 		HAL_Delay(500);
 		servo_angle(dimeServo, 170);
 	  }
@@ -337,7 +337,7 @@ void Use_Screen()
         if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
     	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
     	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-		servo_angle(quarterServo, 45);
+		servo_angle(quarterServo, 30);
 		HAL_Delay(500);
 		servo_angle(quarterServo, 170);
 	  }
