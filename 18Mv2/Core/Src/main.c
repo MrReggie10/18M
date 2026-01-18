@@ -125,6 +125,11 @@ char buf[32];
 
 TouchPoint tp;
 
+volatile uint8_t penny_detected = 0;
+volatile uint8_t nickel_detected = 0;
+volatile uint8_t dime_detected = 0;
+volatile uint8_t quarter_detected = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -143,143 +148,24 @@ static void MX_SPI2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
-  SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USART2_UART_Init();
-  MX_TIM2_Init();
-  MX_TIM3_Init();
-  MX_I2C1_Init();
-  MX_SPI1_Init();
-  MX_SPI2_Init();
-  /* USER CODE BEGIN 2 */
-
-/*********************************************
- ********* SERVO INITIALIZATION **************
- *********************************************/
-
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-
-  pennyServo   = servo_new(&(htim2.Instance->CCR1));
-  nickelServo  = servo_new(&(htim2.Instance->CCR2));
-  dimeServo    = servo_new(&(htim2.Instance->CCR3));
-  quarterServo = servo_new(&(htim2.Instance->CCR4));
-  slotServo    = servo_new(&(htim3.Instance->CCR1));
-
-/*********************************************
- ********** FLASH INITIALIZATION *************
- *********************************************/
-
-  initialize_accounts();
-//  set_money_in_account(JACOB_UID, 0x11111111);
-//  add_account(0x0A7593F3);
-//  initialize_accounts();
-
-//  ST7796S_SetSPI(&hspi1);
-//  ST7796S_Init();
-//
-//  // Fill screen with blue background
-//  ST7796S_FillScreen(0x001F);
-//  HAL_Delay(1000);
-//
-//  // Draw some rectangles
-//  ST7796S_FillRect(50, 50, 100, 80, 0xF800);    // Red
-//  ST7796S_FillRect(200, 100, 120, 100, 0x07E0);  // Green
-//  ST7796S_FillRect(100, 200, 200, 50, 0xFFE0);   // Yellow
-
-/*********************************************
- ********* LCD+TOUCH INITIALIZATION **********
- *********************************************/
-
-  ST7796S_SetSPI(&hspi1);
-  XPT2046_SetSPI(&hspi2);
-  XPT2046_SetUART(&huart2);
-
-  ST7796S_Init();
-  XPT2046_Init();
-
-  //ST7796S_FillScreen(0x0000);  // Black background
-
-  // Optional: Run calibration
-  //XPT2046_Calibrate();
-  //ST7796S_DrawString(10, 10, "Hello World!", &Font24, WHITE, BLACK);
-
-/*********************************************
- *********** RFID INITIALIZATION *************
- *********************************************/
-
-  pn532_SetUART(&huart2);
-
-/*********************************************
- *********** STATE INITIALIZATION ************
- *********************************************/
-
-  state = SPLASH;
-
-
-  if (pn532_init(&nfc, &hi2c1) != PN532_OK) {
-	ST7796S_FillScreen(WHITE);
-    ST7796S_DrawString(10, 100, "Error RFID init", &Font24, BLACK, WHITE);
-    ST7796S_DrawString(20, 124, "please reflash", &Font24, BLACK, WHITE);
-    while(1);
-  }
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
+  if(GPIO_Pin == GPIO_PIN_12)
   {
-    switch (state)
-    {
-      case SPLASH:
-    	Splash_Screen();
-      break;
-      case USE:
-        Use_Screen();
-      break;
-      case THANKYOU:
-        Thankyou_Screen();
-      break;
-    }
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-
+    penny_detected = 1;
   }
-  /* USER CODE END 3 */
+  else if(GPIO_Pin == GPIO_PIN_10)
+  {
+    nickel_detected = 1;
+  }
+  else if(GPIO_Pin == GPIO_PIN_15)
+  {
+    dime_detected = 1;
+  }
+  else if(GPIO_Pin == GPIO_PIN_11)
+  {
+    quarter_detected = 1;
+  }
 }
 
 void Splash_Screen(void)
@@ -298,12 +184,6 @@ void Splash_Screen(void)
   	  break;
     }
   }
-//  strcpy((char *)buf, "UID: ");
-//  HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
-//  for (int i = 0; i < tag.uid_len; i++) {
-//	sprintf(buf, "%02X ", tag.uid[i]);
-//	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
-//  }
 
   currentUser = tag.uid[0];
   currentUser = currentUser<<8;
@@ -355,37 +235,41 @@ void Use_Screen()
 {
   const uint16_t LBLUE = RGB565(0xDF, 0xDF, 0xFF);
 
-  if(ir_read_penny() == GPIO_PIN_RESET)
+  if(penny_detected)
   {
 	currentMoney++;
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-	HAL_Delay(100);
+	HAL_Delay(200);
+    penny_detected = 0;
   }
-  if(ir_read_nickel() == GPIO_PIN_RESET)
+  if(nickel_detected)
   {
 	currentMoney+=5;
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-	HAL_Delay(100);
+	HAL_Delay(200);
+    nickel_detected = 0;
   }
-  if(ir_read_dime() == GPIO_PIN_RESET)
+  if(dime_detected)
   {
 	currentMoney+=10;
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-	HAL_Delay(100);
+	HAL_Delay(200);
+    dime_detected = 0;
   }
-  if(ir_read_quarter() == GPIO_PIN_RESET)
+  if(quarter_detected)
   {
 	currentMoney+=25;
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
-	HAL_Delay(100);
+	HAL_Delay(200);
+    quarter_detected = 0;
   }
 
 
@@ -413,7 +297,7 @@ void Use_Screen()
 		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
 		servo_angle(pennyServo, 45);
 		HAL_Delay(500);
-		servo_angle(pennyServo, 180);
+		servo_angle(pennyServo, 170);
 	  }
 	}
 	// nickel button
@@ -427,7 +311,7 @@ void Use_Screen()
 		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
 		servo_angle(nickelServo, 45);
 		HAL_Delay(500);
-		servo_angle(nickelServo, 180);
+		servo_angle(nickelServo, 170);
 	  }
 	}
 	// dime button
@@ -441,7 +325,7 @@ void Use_Screen()
 		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
 		servo_angle(dimeServo, 45);
 		HAL_Delay(500);
-		servo_angle(dimeServo, 180);
+		servo_angle(dimeServo, 170);
 	  }
 	}
 	// quarter button
@@ -455,7 +339,7 @@ void Use_Screen()
     	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
 		servo_angle(quarterServo, 45);
 		HAL_Delay(500);
-		servo_angle(quarterServo, 180);
+		servo_angle(quarterServo, 170);
 	  }
 	}
 
@@ -467,7 +351,7 @@ void Use_Screen()
 	}
   }
 
-  HAL_Delay(40);
+  HAL_Delay(50);
 }
 
 void Thankyou_Screen(void)
@@ -477,6 +361,126 @@ void Thankyou_Screen(void)
 
   HAL_Delay(3000);
   state = SPLASH;
+}
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_I2C1_Init();
+  MX_SPI1_Init();
+  MX_SPI2_Init();
+  /* USER CODE BEGIN 2 */
+
+/*********************************************
+ ********* SERVO INITIALIZATION **************
+ *********************************************/
+
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+
+  pennyServo   = servo_new(&(htim2.Instance->CCR3));
+  nickelServo  = servo_new(&(htim2.Instance->CCR4));
+  dimeServo    = servo_new(&(htim2.Instance->CCR2));
+  quarterServo = servo_new(&(htim2.Instance->CCR1));
+
+/*********************************************
+ ********** FLASH INITIALIZATION *************
+ *********************************************/
+
+  initialize_accounts();
+
+/*********************************************
+ ********* LCD+TOUCH INITIALIZATION **********
+ *********************************************/
+
+  ST7796S_SetSPI(&hspi1);
+  XPT2046_SetSPI(&hspi2);
+  XPT2046_SetUART(&huart2);
+
+  ST7796S_Init();
+  XPT2046_Init();
+
+/*********************************************
+ *********** RFID INITIALIZATION *************
+ *********************************************/
+
+  pn532_SetUART(&huart2);
+
+/*********************************************
+ *********** STATE INITIALIZATION ************
+ *********************************************/
+
+  state = SPLASH;
+
+  servo_angle(pennyServo, 170);
+  servo_angle(nickelServo, 170);
+  servo_angle(dimeServo, 170);
+  servo_angle(quarterServo, 170);
+
+  if (pn532_init(&nfc, &hi2c1) != PN532_OK) {
+	ST7796S_FillScreen(WHITE);
+    ST7796S_DrawString(10, 100, "Error RFID init", &Font24, BLACK, WHITE);
+    ST7796S_DrawString(20, 124, "please reflash", &Font24, BLACK, WHITE);
+    while(1);
+  }
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    switch (state)
+    {
+      case SPLASH:
+    	Splash_Screen();
+      break;
+      case USE:
+        Use_Screen();
+      break;
+      case THANKYOU:
+        Thankyou_Screen();
+      break;
+    }
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+
+  }
+  /* USER CODE END 3 */
 }
 
 /**
@@ -857,9 +861,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PA10 PA11 PA12 PA15 */
   GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 

@@ -180,7 +180,7 @@ uint32_t reset_accounts()
   addr += 4;
   if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, CAMERON_UID) != HAL_OK) return HAL_FLASH_GetError();
   addr += 4;
-  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00000100) != HAL_OK) return HAL_FLASH_GetError();
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, 0x00FFFFFF) != HAL_OK) return HAL_FLASH_GetError();
 
   // write UID for Amy
   addr += 4;
