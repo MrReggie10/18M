@@ -236,25 +236,6 @@ int main(void)
   //XPT2046_Calibrate();
   //ST7796S_DrawString(10, 10, "Hello World!", &Font24, WHITE, BLACK);
 
-  // SERVO CODE
-//  servo_angle(pennyServo, 180);
-//  servo_angle(nickelServo, 180);
-//  servo_angle(dimeServo, 180);
-//  servo_angle(quarterServo, 180);
-//  HAL_Delay(2000);
-//
-//  servo_angle(pennyServo, 60);
-//  servo_angle(nickelServo, 60);
-//  servo_angle(dimeServo, 60);
-//  servo_angle(quarterServo, 60);
-//  HAL_Delay(2000);
-//
-//  servo_angle(pennyServo, 180);
-//  servo_angle(nickelServo, 180);
-//  servo_angle(dimeServo, 180);
-//  servo_angle(quarterServo, 180);
-//  HAL_Delay(2000);
-
 /*********************************************
  *********** RFID INITIALIZATION *************
  *********************************************/
@@ -274,6 +255,7 @@ int main(void)
     ST7796S_DrawString(20, 124, "please reflash", &Font24, BLACK, WHITE);
     while(1);
   }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -289,31 +271,9 @@ int main(void)
         Use_Screen();
       break;
       case THANKYOU:
-        //yes
+        Thankyou_Screen();
       break;
     }
-	//strcpy((char *)buf, "Success\r\n");
-	//HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
-	//HAL_Delay(20);
-
-
-//    servo_angle(pennyServo, 180);
-//	servo_angle(nickelServo, 180);
-//	servo_angle(dimeServo, 180);
-//	servo_angle(quarterServo, 180);
-//	HAL_Delay(2000);
-//
-//	servo_angle(pennyServo, 90);
-//	servo_angle(nickelServo, 90);
-//	servo_angle(dimeServo, 90);
-//	servo_angle(quarterServo, 90);
-//	HAL_Delay(2000);
-//
-//	servo_angle(pennyServo, 180);
-//	servo_angle(nickelServo, 180);
-//	servo_angle(dimeServo, 180);
-//	servo_angle(quarterServo, 180);
-//	HAL_Delay(2000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -326,9 +286,11 @@ void Splash_Screen(void)
 {
   ST7796S_FillScreen(WHITE);
 
-  ST7796S_DrawString(10, 100, "Please scan your", &Font24, BLACK, WHITE);
-  ST7796S_DrawString(10, 122, "andrewID card to", &Font24, BLACK, WHITE);
-  ST7796S_DrawString(20, 144, "     begin", &Font24, BLACK, WHITE);
+  ST7796S_DrawString(30, 40, "Welcome to 18M!", &Font24, BLACK, WHITE);
+
+  ST7796S_DrawString(20, 100, "Please scan your", &Font24, BLACK, WHITE);
+  ST7796S_DrawString(20, 122, "andrewID card to", &Font24, BLACK, WHITE);
+  ST7796S_DrawString(30, 144, "     begin", &Font24, BLACK, WHITE);
   //HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
   while (1) {
     if (pn532_read_passive_target(&nfc, &tag, 500) == PN532_OK) {
@@ -399,6 +361,7 @@ void Use_Screen()
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+	HAL_Delay(100);
   }
   if(ir_read_nickel() == GPIO_PIN_RESET)
   {
@@ -406,6 +369,7 @@ void Use_Screen()
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+	HAL_Delay(100);
   }
   if(ir_read_dime() == GPIO_PIN_RESET)
   {
@@ -413,6 +377,7 @@ void Use_Screen()
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+	HAL_Delay(100);
   }
   if(ir_read_quarter() == GPIO_PIN_RESET)
   {
@@ -420,6 +385,7 @@ void Use_Screen()
 	if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
 	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
 	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+	HAL_Delay(100);
   }
 
 
@@ -427,17 +393,90 @@ void Use_Screen()
 
   if(tp.touched) {
 	uint16_t screen_x, screen_y;
-	XPT2046_GetScreenCoordinates(&tp, &screen_y, &screen_x);
+	XPT2046_GetScreenCoordinates(&tp, &screen_x, &screen_y);
 
 	// Draw a small circle where touched
-	ST7796S_FillRect(screen_y - 2, screen_x - 2, 5, 5, BLACK);
+	ST7796S_FillRect(screen_x - 2, screen_y - 2, 5, 5, BLACK);
 
 	// Display coordinates
-	sprintf(buf, "X:%d Y:%d\r\n", screen_x, screen_y);
-	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+//	sprintf(buf, "X:%d Y:%d\r\n", screen_x, screen_y);
+//	HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen((char *)buf), HAL_MAX_DELAY);
+
+	// penny button
+	if(20 <= screen_x && screen_x <= 150 && 228 <= screen_y && screen_y <= 278)
+	{
+	  if(currentMoney >= 1)
+	  {
+		currentMoney -= 1;
+		if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+		else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+		servo_angle(pennyServo, 45);
+		HAL_Delay(500);
+		servo_angle(pennyServo, 180);
+	  }
+	}
+	// nickel button
+	if(170 <= screen_x && screen_x <= 300 && 228 <= screen_y && screen_y <= 278)
+	{
+	  if(currentMoney >= 5)
+	  {
+		currentMoney -= 5;
+		if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+		else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+		servo_angle(nickelServo, 45);
+		HAL_Delay(500);
+		servo_angle(nickelServo, 180);
+	  }
+	}
+	// dime button
+	if(20 <= screen_x && screen_x <= 150 && 298 <= screen_y && screen_y <= 368)
+	{
+	  if(currentMoney >= 10)
+	  {
+		currentMoney -= 10;
+		if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+		else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+		ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+		servo_angle(dimeServo, 45);
+		HAL_Delay(500);
+		servo_angle(dimeServo, 180);
+	  }
+	}
+	// quarter button
+	if(170 <= screen_x && screen_x <= 300 && 298 <= screen_y && screen_y <= 368)
+	{
+	  if(currentMoney >= 25)
+	  {
+        currentMoney -= 25;
+        if(currentMoney%100 < 10) sprintf(buf, "$%d.0%d", currentMoney/100, currentMoney%100);
+    	else sprintf(buf, "$%d.%d", currentMoney/100, currentMoney%100);
+    	ST7796S_DrawString(110, 48, buf, &Font24, BLUE, LBLUE);
+		servo_angle(quarterServo, 45);
+		HAL_Delay(500);
+		servo_angle(quarterServo, 180);
+	  }
+	}
+
+	// exit button
+	if(20 <= screen_x && screen_x <= 150 && 410 <= screen_y && screen_y <= 460)
+	{
+	  set_money_in_account(currentUser, currentMoney);
+	  state = THANKYOU;
+	}
   }
 
-  HAL_Delay(50);
+  HAL_Delay(40);
+}
+
+void Thankyou_Screen(void)
+{
+  ST7796S_FillScreen(WHITE);
+  ST7796S_DrawString(40, 150, "Thank you for\n using 18M!", &Font24, BLACK, WHITE);
+
+  HAL_Delay(3000);
+  state = SPLASH;
 }
 
 /**

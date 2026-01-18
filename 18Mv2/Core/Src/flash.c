@@ -43,7 +43,6 @@ uint32_t add_account(uint32_t fourbUID)
   	money[i] = *(__IO uint32_t *)(addr+(8*i)+4);
   }
   users[numUsers-1] = fourbUID;
-  addr += 4;
 
   money[numUsers-1] = 0x64;
 
@@ -89,7 +88,7 @@ uint32_t get_money_in_account(uint32_t fourbUID)
   {
 	currentUser = *(__IO uint32_t *)(addr+(8*i));
 	if(currentUser == fourbUID) {
-	  return *(__IO uint32_t *)(addr+4);
+	  return *(__IO uint32_t *)(addr+(8*i)+4);
 	}
   }
 

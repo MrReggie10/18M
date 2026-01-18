@@ -74,10 +74,10 @@ TouchPoint XPT2046_GetTouchAvg(void) {
 }
 
 TouchCalibration touch_cal = {
-    .x_min = 0x207,   // Calibrate these values
-    .x_max = 0xD95,
-    .y_min = 0x1FE,
-    .y_max = 0xD92
+    .x_min = 0x1D5,   // Calibrate these values
+    .x_max = 0xDDB,
+    .y_min = 0xDDF,
+    .y_max = 0x178
 };
 
 void XPT2046_GetScreenCoordinates(TouchPoint *tp, uint16_t *screen_x, uint16_t *screen_y) {
@@ -88,12 +88,12 @@ void XPT2046_GetScreenCoordinates(TouchPoint *tp, uint16_t *screen_x, uint16_t *
     }
 
     // Map touch coordinates to screen coordinates (480x320)
-    *screen_x = (tp->x - touch_cal.x_min) * 480 / (touch_cal.x_max - touch_cal.x_min);
-    *screen_y = (tp->y - touch_cal.y_min) * 320 / (touch_cal.y_max - touch_cal.y_min);
+    *screen_x = (tp->x - touch_cal.x_min) * 320 / (touch_cal.x_max - touch_cal.x_min);
+    *screen_y = (tp->y - touch_cal.y_min) * 480 / (touch_cal.y_max - touch_cal.y_min);
 
     // Clamp to screen bounds
-    if(*screen_x > 479) *screen_x = 479;
-    if(*screen_y > 319) *screen_y = 319;
+    if(*screen_x > 319) *screen_x = 319;
+    if(*screen_y > 479) *screen_y = 479;
 }
 
 void XPT2046_Calibrate(void) {
